@@ -5,6 +5,7 @@ class Settings {
     /*******************************************************************************************************************
      * Basic configuration
      * Should be enough to get your bot running.
+     * Dont forget to setup a cronjob executing cron.php every $MAX_RUN_TIME + a small offset
      ******************************************************************************************************************/
 
     // Slack webhook URL

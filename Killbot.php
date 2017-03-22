@@ -44,8 +44,6 @@ class Killbot {
             $attackerCount = $killmail->{'attackerCount'};
             $killId = $killmail->{'killID'};
 
-            var_dump($killId);
-
             // Looking up final blow
             foreach ($killmail->{'attackers'} as $attacker) {
                 if ($attacker->{'finalBlow'} == true) {
