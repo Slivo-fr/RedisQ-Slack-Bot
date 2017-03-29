@@ -35,4 +35,10 @@ class Settings {
 
     // URL to redisQ
     public static $REDISQ_URL = 'https://redisq.zkillboard.com/listen.php?ttw=1';
+
+    // Enable debugging behaviors
+    public static $DEBUG = false;
+
+    // Folder name for json logs
+    public static $KILL_LOG_FOLDER = 'logs';
 }

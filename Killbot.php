@@ -26,14 +26,18 @@ class Killbot {
 
         $data = json_decode($rawOutput);
 
-        if ($data->{'package'} == null) {
+        if (!isset($data->{'package'}) || $data->{'package'} == null) {
             return false;
         }
 
         $killmail = $data->{'package'}->{'killmail'};
 
         // Only process kill that match settings entities
-        if ($this->isWatchedKill($killmail)) {
+        if (true || $this->isWatchedKill($killmail)) {
+
+            if (Settings::$DEBUG) {
+                $this->storeKillJson($data->{'package'}->{'killID'}, $rawOutput);
+            }
 
             $zkb = $data->{'package'}->{'zkb'};
             $jsonKill = new stdClass();
@@ -77,10 +81,15 @@ class Killbot {
 
             // Dissociating kill and loss
             if ($isVictimAllianceWatched || $isVictimCorpWatched) {
-                $killerCorpName = $killer->{'corporation'}->{'name'};
-                $jsonKill->fallback = "$victimName's $victimShipName got killed by $killerName ($killerCorpName)";
+
+                $jsonKill->fallback = "$victimName's $victimShipName got killed by $killerName";
+                if (isset($killer->{'corporation'}->{'name'})) {
+                    $jsonKill->fallback .= ' (' . $killer->{'corporation'}->{'name'} . ')';
+                }
                 $jsonKill->color = 'danger';
+
             } else {
+                
                 $victimCorpName = $victim->{'corporation'}->{'name'};
 
                 if($noVictim) {
@@ -215,6 +224,25 @@ class Killbot {
 
         curl_exec($ch);
         curl_close($ch);
+    }
+
+    private function storeKillJson($killId, $data) {
+
+        $directoryName = __DIR__ . DIRECTORY_SEPARATOR . Settings::$KILL_LOG_FOLDER;
+        echo $directoryName . PHP_EOL;
+
+        mkdir($directoryName, 0755, true);
+
+
+        $fileName = $directoryName . DIRECTORY_SEPARATOR . $killId . '.json';
+
+        echo $fileName . PHP_EOL;
+
+        $file = fopen($fileName, 'a+');
+        fwrite($file, $data);
+        fclose($file);
+
+        die();
     }
 
 }
