@@ -20,7 +20,7 @@ class Killbot {
      * Fetch and process one kill from RedisQ
      * Return false if the queue is empty, true otherwise
      */
-    public function processKill() {
+    private function processKill() {
 
         $rawOutput = $this->curlRequest(Settings::$REDISQ_URL);
 
