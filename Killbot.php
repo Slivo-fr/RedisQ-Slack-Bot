@@ -229,20 +229,16 @@ class Killbot {
     private function storeKillJson($killId, $data) {
 
         $directoryName = __DIR__ . DIRECTORY_SEPARATOR . Settings::$KILL_LOG_FOLDER;
-        echo $directoryName . PHP_EOL;
 
-        mkdir($directoryName, 0755, true);
-
+        if (!file_exists($directoryName)) {
+            mkdir($directoryName, 0755, true);
+        }
 
         $fileName = $directoryName . DIRECTORY_SEPARATOR . $killId . '.json';
-
-        echo $fileName . PHP_EOL;
 
         $file = fopen($fileName, 'a+');
         fwrite($file, $data);
         fclose($file);
-
-        die();
     }
 
 }
