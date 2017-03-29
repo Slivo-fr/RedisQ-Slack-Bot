@@ -33,7 +33,7 @@ class Killbot {
         $killmail = $data->{'package'}->{'killmail'};
 
         // Only process kill that match settings entities
-        if (true || $this->isWatchedKill($killmail)) {
+        if ($this->isWatchedKill($killmail)) {
 
             if (Settings::$DEBUG) {
                 $this->storeKillJson($data->{'package'}->{'killID'}, $rawOutput);
