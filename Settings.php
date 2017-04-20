@@ -22,6 +22,9 @@ class Settings {
         ],
         'alliances' => [
             13245678
+        ],
+        'systems' => [
+            30003504
         ]
     ];
 
