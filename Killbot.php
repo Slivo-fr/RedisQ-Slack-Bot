@@ -41,7 +41,7 @@ class Killbot {
 
             $zkb = $data->{'package'}->{'zkb'};
             $jsonKill = new stdClass();
-            $jsonAttachements = new stdClass();
+            $jsonAttachments = new stdClass();
 
             $killer = null;
             $noVictim = false;
@@ -123,9 +123,9 @@ class Killbot {
             $jsonTotalAttackers->short = 'true';
 
             $jsonKill->fields = [$jsonKillValue, $jsonTotalAttackers];
-            $jsonAttachements->attachments = [$jsonKill];
+            $jsonAttachments->attachments = [$jsonKill];
 
-            $this->pushToSlack($jsonAttachements);
+            $this->pushToSlack($jsonAttachments);
         }
 
 
@@ -136,8 +136,9 @@ class Killbot {
 
         $isVictimWatched = $this->isVictimWatched($killmail);
         $isAttackerWatched = $this->isAttackerWatched($killmail);
+        $isSystemWatched = $this->isSystemWatched($killmail);
 
-        return $isVictimWatched || $isAttackerWatched;
+        return $isVictimWatched || $isAttackerWatched || $isSystemWatched;
     }
 
     private function isVictimWatched($killmail) {
@@ -177,8 +178,18 @@ class Killbot {
                 }
             }
         }
+
+        return false;
     }
 
+    private function isSystemWatched($killmail)
+    {
+        if (in_array($killmail->{'solarSystem'}->{'id'}, Settings::$WATCHED_ENTITIES['systems'])) {
+            return true;
+        }
+
+        return false;
+    }
 
     private function getShipName($victimShipId) {
 
