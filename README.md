@@ -13,7 +13,7 @@ This bot use RedisQ (https://github.com/zKillboard/RedisQ) in order to provide q
 
 Checkout this project and edit the first part of `Setting.php` to match your configuration.
 
-You must at least fill the `$SLACK_HOOK` variable and edit `$WATCHED_ENTITIES` to match your goal.
+You must at least fill the `$SLACK_HOOK` variable and edit `$WATCHED_ENTITIES`.
 
 Use a cronjob to run the `cron.php` file every 5 minutes (or another value matching your timeout settings).
  
