@@ -14,7 +14,7 @@ class Settings {
     // 4 minutes default max run time
     public static $MAX_RUN_TIME = 4 * 60;
 
-    // Entities you want to display killmails
+    // Entities you want to display killmails for
     public static $WATCHED_ENTITIES = [
         'corporations' => [
             123456,
@@ -30,7 +30,7 @@ class Settings {
 
     /*******************************************************************************************************************
      * Advanced configuration
-     * Do not edit until you know what you are doing
+     * Do not edit unless you know what you are doing
      ******************************************************************************************************************/
 
     // HTTP header sent with each bot request
