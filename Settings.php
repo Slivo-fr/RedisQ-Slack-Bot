@@ -45,5 +45,6 @@ class Settings {
     // Folder name for json logs
     public static $KILL_LOG_FOLDER = 'logs';
 
+    // ESI base URL
     public static $ESI_URL = 'https://esi.tech.ccp.is/latest';
 }
