@@ -3,7 +3,9 @@
 
 class Killbot {
 
-    protected $knownShipList = array();
+    protected $knownShips = array();
+    protected $knownCharacters = array();
+    protected $knownCorporations = array();
 
     public function run() {
 
@@ -45,36 +47,36 @@ class Killbot {
 
             $killer = null;
             $noVictim = false;
-            $attackerCount = $killmail->{'attackerCount'};
-            $killId = $killmail->{'killID'};
+            $attackerCount = count($killmail->{'attackers'});
+            $killId = $killmail->{'killmail_id'};
 
             // Looking up final blow
             foreach ($killmail->{'attackers'} as $attacker) {
-                if ($attacker->{'finalBlow'} == true) {
+                if ($attacker->{'final_blow'} == true) {
                     $killer = $attacker;
                 }
             }
 
             // Handling NPC kills
-            if (!isset($killer->{'character'}->{'name'})) {
-                $killerName = $killer->{'shipType'}->{'name'};
+            if (!isset($killer->{'character_id'})) {
+                $killerName = $this->getShipName($killer->{'ship_type_id'});
             } else {
-                $killerName = $killer->{'character'}->{'name'};
+                $killerName = $this->getCharacterName($killer->{'character_id'});
             }
 
             // Handling case with no pilots victims
             $victim = $killmail->{'victim'};
-            if (!isset($victim->{'character'}->{'name'})) {
+            if (!isset($victim->{'character_id'})) {
                 $noVictim = true;
-                $victimName = $victim->{'corporation'}->{'name'};
+                $victimName = $this->getCorporationName($victim->{'corporation_id'});
             } else {
-                $victimName = $victim->{'character'}->{'name'};
+                $victimName = $this->getCharacterName($victim->{'character_id'});
             }
 
-            $victimShipId = $victim->{'shipType'}->{'id'};
+            $victimShipId = $victim->{'ship_type_id'};
             $victimShipName = $this->getShipName($victimShipId);
 
-            $isVictimCorpWatched = in_array($victim->{'corporation'}->{'id'}, Settings::$WATCHED_ENTITIES['corporations']);
+            $isVictimCorpWatched = in_array($victim->{'corporation_id'}, Settings::$WATCHED_ENTITIES['corporations']);
             $isVictimAllianceWatched =
                 isset($victim->{'alliance'}) &&
                 in_array($victim->{'alliance'}->{'id'}, Settings::$WATCHED_ENTITIES['alliances']);
@@ -83,14 +85,13 @@ class Killbot {
             if ($isVictimAllianceWatched || $isVictimCorpWatched) {
 
                 $jsonKill->fallback = "$victimName's $victimShipName got killed by $killerName";
-                if (isset($killer->{'corporation'}->{'name'})) {
-                    $jsonKill->fallback .= ' (' . $killer->{'corporation'}->{'name'} . ')';
+                if (isset($killer->{'corporation_id'})) {
+                    $jsonKill->fallback .= ' (' . $this->getCorporationName($killer->{'corporation_id'}) . ')';
                 }
                 $jsonKill->color = 'danger';
 
             } else {
-                
-                $victimCorpName = $victim->{'corporation'}->{'name'};
+                $victimCorpName = $this->getCorporationName($victim->{'corporation_id'});
 
                 if($noVictim) {
                     $jsonKill->fallback = "$killerName killed $victimName's $victimShipName";
@@ -184,7 +185,7 @@ class Killbot {
 
     private function isSystemWatched($killmail)
     {
-        if (in_array($killmail->{'solarSystem'}->{'id'}, Settings::$WATCHED_ENTITIES['systems'])) {
+        if (in_array($killmail->{'solar_system_id'}, Settings::$WATCHED_ENTITIES['systems'])) {
             return true;
         }
 
@@ -193,20 +194,50 @@ class Killbot {
 
     private function getShipName($victimShipId) {
 
-        if (in_array($victimShipId, $this->knownShipList)) {
-            return $this->knownShipList[$victimShipId];
+        if (in_array($victimShipId, $this->knownShips)) {
+            return $this->knownShips[$victimShipId];
         }
 
-        $json = $this->curlRequest("https://crest-tq.eveonline.com/inventory/types/$victimShipId/");
+        $json = $this->curlRequest(Settings::$ESI_URL . "/universe/types/$victimShipId/");
         $data = json_decode($json);
 
         $shipName = $data->{'name'};
-        $this->knownShipList[$victimShipId] = $shipName;
+        $this->knownShips[$victimShipId] = $shipName;
 
         return $shipName;
     }
 
-    private function curlRequest ($url) {
+    private function getCharacterName($characterId) {
+
+        if (in_array($characterId, $this->knownCharacters)) {
+            return $this->knownCharacters[$characterId];
+        }
+
+        $json = $this->curlRequest(Settings::$ESI_URL . "/characters/$characterId/");
+        $data = json_decode($json);
+
+        $characterName = $data->{'name'};
+        $this->knownCharacters[$characterId] = $characterName;
+
+        return $characterName;
+    }
+
+    private function getCorporationName($corporationId) {
+
+        if (in_array($corporationId, $this->knownCorporations)) {
+            return $this->knownCorporations[$corporationId];
+        }
+
+        $json = $this->curlRequest(Settings::$ESI_URL . "/corporations/$corporationId/");
+        $data = json_decode($json);
+
+        $corporationName = $data->{'corporation_name'};
+        $this->knownCorporations[$corporationId] = $corporationName;
+
+        return $corporationName;
+    }
+
+    private function curlRequest($url) {
 
         $ch = curl_init();
 
@@ -253,3 +284,4 @@ class Killbot {
     }
 
 }
+
