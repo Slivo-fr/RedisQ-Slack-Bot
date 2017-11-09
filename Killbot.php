@@ -79,7 +79,7 @@ class Killbot {
             $isVictimCorpWatched = in_array($victim->{'corporation_id'}, Settings::$WATCHED_ENTITIES['corporations']);
             $isVictimAllianceWatched =
                 isset($victim->{'alliance'}) &&
-                in_array($victim->{'alliance'}->{'id'}, Settings::$WATCHED_ENTITIES['alliances']);
+                in_array($victim->{'alliance_id'}, Settings::$WATCHED_ENTITIES['alliances']);
 
             // Dissociating kill and loss
             if ($isVictimAllianceWatched || $isVictimCorpWatched) {
@@ -146,14 +146,14 @@ class Killbot {
 
         $victim = $killmail->{'victim'};
 
-        if (isset($victim->{'corporation'}->{'id'})) {
-            if (in_array($victim->{'corporation'}->{'id'}, Settings::$WATCHED_ENTITIES['corporations'])){
+        if (isset($victim->{'corporation_id'})) {
+            if (in_array($victim->{'corporation_id'}, Settings::$WATCHED_ENTITIES['corporations'])){
                 return true;
             }
         }
 
-        if (isset($victim->{'alliance'}->{'id'})) {
-            if (in_array($victim->{'alliance'}->{'id'}, Settings::$WATCHED_ENTITIES['alliances'])){
+        if (isset($victim->{'alliance_id'})) {
+            if (in_array($victim->{'alliance_id'}, Settings::$WATCHED_ENTITIES['alliances'])){
                 return true;
             }
         }
@@ -167,14 +167,14 @@ class Killbot {
 
         foreach ($attackers as $attacker) {
 
-            if (isset($attacker->{'corporation'}->{'id'})) {
-                if (in_array($attacker->{'corporation'}->{'id'}, Settings::$WATCHED_ENTITIES['corporations'])){
+            if (isset($attacker->{'corporation_id'})) {
+                if (in_array($attacker->{'corporation_id'}, Settings::$WATCHED_ENTITIES['corporations'])){
                     return true;
                 }
             }
 
-            if (isset($attacker->{'alliance'}->{'id'})) {
-                if (in_array($attacker->{'alliance'}->{'id'}, Settings::$WATCHED_ENTITIES['alliances'])){
+            if (isset($attacker->{'alliance_id'})) {
+                if (in_array($attacker->{'alliance_id'}, Settings::$WATCHED_ENTITIES['alliances'])){
                     return true;
                 }
             }
@@ -285,4 +285,3 @@ class Killbot {
     }
 
 }
-
