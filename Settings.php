@@ -1,5 +1,7 @@
 <?php
 
+namespace Killbot;
+
 class Settings {
 
     /*******************************************************************************************************************
@@ -27,6 +29,27 @@ class Settings {
             30003504
         ]
     ];
+
+    /*******************************************************************************************************************
+     * Mail settings
+     * Allow script to send mail alert when something goes wrong
+     ******************************************************************************************************************/
+
+    // Enable sending mails
+    public static $SEND_MAIL = true;
+
+    // Server configuration
+    public static $SMTP_SERVER = 'smtp.example.com';
+    public static $SMTP_PORT = '465';
+    public static $SMTP_USER = 'user@example.com';
+    public static $SMTP_PASSWORD = 'my_password';
+
+    // Use null or ssl if required
+    public static $SECURITY = 'ssl';
+
+    // Mail addresses
+    public static $MAIL_RECIPIENT = 'recipient@example.com';
+    public static $MAIL_SENDER = 'sender@example.com';
 
     /*******************************************************************************************************************
      * Advanced configuration

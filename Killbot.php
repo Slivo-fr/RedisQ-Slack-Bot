@@ -1,5 +1,8 @@
 <?php
 
+namespace Killbot;
+
+use stdClass;
 
 class Killbot {
 
