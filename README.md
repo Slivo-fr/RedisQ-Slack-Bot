@@ -7,15 +7,17 @@ This bot use RedisQ (https://github.com/zKillboard/RedisQ) in order to provide q
 
 ## Requirements
 * Slack
-* PHP (with ext-curl)
+* PHP 7 (with ext-curl)
+* Composer
 
 ## Setup
 
-Checkout this project and edit the first part of `Setting.php` to match your configuration.
+* Checkout the project 
+* Run `composer install`
+* Edit the first part of `Setting.php` to match your configuration.
+> You must at least fill the `$SLACK_HOOK` variable and edit `$WATCHED_ENTITIES`.
 
-You must at least fill the `$SLACK_HOOK` variable and edit `$WATCHED_ENTITIES`.
-
-Use a cronjob to run the `cron.php` file every 5 minutes (or another value matching your timeout settings).
+* Setup a cronjob to run the `cron.php` file every 5 minutes (or another value matching your timeout settings).
  
  ## Disclaimer
  
