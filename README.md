@@ -7,7 +7,7 @@ This bot use RedisQ (https://github.com/zKillboard/RedisQ) in order to provide q
 
 ## Requirements
 * Slack
-* PHP
+* PHP (with ext-curl)
 
 ## Setup
 
@@ -19,4 +19,6 @@ Use a cronjob to run the `cron.php` file every 5 minutes (or another value match
  
  ## Disclaimer
  
- This project is in early alpha state and may crash or malfunction. I'll try to fix issues occurring on my side, please report if you get some specific case that don't work. 
+ This project has been running fine for some time now, however it rely on zkillboard redisq service that may change at some point.
+ 
+ Please report any weird behavior so I can fix it !
