@@ -1,7 +1,7 @@
 <?php
 
 set_error_handler(function($code, $message, $file, $line) {
-    echo $message . "\n";
+    echo $message . PHP_EOL;
     throw new ErrorException($message, 0, $code, $file, $line);
 });
 

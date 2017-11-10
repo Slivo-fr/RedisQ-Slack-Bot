@@ -37,9 +37,9 @@ class AlertHandler
 
 
         if ($mailer->send($message)) {
-            echo "Alert mail sent\n";
+            echo 'Alert mail sent' . PHP_EOL;
         } else {
-            echo "Failed to send alert mail\n";
+            echo 'Failed to send alert mail'  . PHP_EOL;
         }
     }
     protected static function generateBody(Exception $e)
