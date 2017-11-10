@@ -19,6 +19,10 @@ This bot use RedisQ (https://github.com/zKillboard/RedisQ) in order to provide q
 
 * Setup a cronjob to run the `cron.php` file every 5 minutes (or another value matching your timeout settings).
  
+ ## Mailing
+ 
+ If you choose to use error mailing, you can check your configuration by sending a test mail running `php checkmail.php`.
+ 
  ## Disclaimer
  
  This project has been running fine for some time now, however it rely on zkillboard redisq service that may change at some point.
