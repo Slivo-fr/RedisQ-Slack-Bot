@@ -11,14 +11,23 @@ use Killbot\AlertHandler;
 use Killbot\Killbot;
 use Killbot\Settings;
 
-try {
-
+function runBot() {
     $killbot = new Killbot();
     $killbot->run();
 }
-catch (Exception $e) {
 
-    if (Settings::$SEND_MAIL) {
-        AlertHandler::sendAlertMail($e);
+if (!Settings::$DEBUG) {
+
+    try {
+
+        runBot();
     }
+    catch (Exception $e) {
+
+        if (Settings::$SEND_MAIL) {
+            AlertHandler::sendAlertMail($e);
+        }
+    }
+} else {
+    runBot();
 }

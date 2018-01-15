@@ -201,7 +201,7 @@ class Killbot {
             return $this->knownShips[$victimShipId];
         }
 
-        $json = $this->curlRequest(Settings::$ESI_URL . "/universe/types/$victimShipId/");
+        $json = $this->curlRequest(Settings::$ESI_URL . "v1/universe/types/$victimShipId/");
         $data = json_decode($json);
 
         $shipName = $data->{'name'};
@@ -216,7 +216,7 @@ class Killbot {
             return $this->knownCharacters[$characterId];
         }
 
-        $json = $this->curlRequest(Settings::$ESI_URL . "/characters/$characterId/");
+        $json = $this->curlRequest(Settings::$ESI_URL . "v4/characters/$characterId/");
         $data = json_decode($json);
 
         $characterName = $data->{'name'};
@@ -231,10 +231,10 @@ class Killbot {
             return $this->knownCorporations[$corporationId];
         }
 
-        $json = $this->curlRequest(Settings::$ESI_URL . "/corporations/$corporationId/");
+        $json = $this->curlRequest(Settings::$ESI_URL . "v4/corporations/$corporationId/");
         $data = json_decode($json);
 
-        $corporationName = $data->{'corporation_name'};
+        $corporationName = $data->{'name'};
         $this->knownCorporations[$corporationId] = $corporationName;
 
         return $corporationName;
@@ -257,6 +257,10 @@ class Killbot {
     }
 
     private function pushToSlack($killData) {
+
+        if (Settings::$DEBUG) {
+            print_r($killData);
+        }
 
         $data = "payload=" .json_encode($killData);
 
