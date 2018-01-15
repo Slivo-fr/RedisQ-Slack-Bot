@@ -201,7 +201,7 @@ class Killbot {
             return $this->knownShips[$victimShipId];
         }
 
-        $json = $this->curlRequest(Settings::$ESI_URL . "v1/universe/types/$victimShipId/");
+        $json = $this->curlRequest(Settings::$ESI_URL . "v3/universe/types/$victimShipId/");
         $data = json_decode($json);
 
         $shipName = $data->{'name'};
