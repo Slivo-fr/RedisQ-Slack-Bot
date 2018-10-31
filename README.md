@@ -12,6 +12,8 @@ This bot use RedisQ (https://github.com/zKillboard/RedisQ) in order to provide q
 
 ## Setup
 
+Warning: You can only host this script once behind a given IP address due to RedisQ limitations
+
 * Checkout the project 
 * Run `composer install`
 * Edit the first part of `Setting.php` to match your configuration.
