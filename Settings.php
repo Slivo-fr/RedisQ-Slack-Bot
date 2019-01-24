@@ -69,4 +69,5 @@ class Settings {
     public static $KILL_LOG_FOLDER = 'logs';
 
     // ESI base URL
-    public static $ESI_URL = 'https://esi.tech.ccp.is/';}
+    public static $ESI_URL = 'https://esi.evetech.net/';
+}
