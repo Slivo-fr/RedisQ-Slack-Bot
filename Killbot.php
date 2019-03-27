@@ -4,13 +4,18 @@ namespace Killbot;
 
 use stdClass;
 
-class Killbot {
+class Killbot
+{
 
     protected $knownShips = array();
     protected $knownCharacters = array();
     protected $knownCorporations = array();
 
-    public function run() {
+    /**
+     * Runs the bot
+     */
+    public function run()
+    {
 
         $isFeedEmpty = false;
         $timeout = time() + Settings::$MAX_RUN_TIME;
@@ -21,11 +26,12 @@ class Killbot {
         }
     }
 
-    /*
+    /**
      * Fetch and process one kill from RedisQ
      * Return false if the queue is empty, true otherwise
      */
-    private function processKill() {
+    private function processKill()
+    {
 
         $rawOutput = $this->curlRequest(Settings::$REDISQ_URL);
 
@@ -35,128 +41,66 @@ class Killbot {
             return false;
         }
 
-        $killmail = $data->{'package'}->{'killmail'};
+        foreach (Settings::$watchingConfigurations as $watchingConfiguration) {
 
-        // Only process kill that match settings entities
-        if ($this->isWatchedKill($killmail)) {
+            $slackHook = $watchingConfiguration['SLACK_HOOK'];
+            $watchedEntities = $watchingConfiguration['WATCHED_ENTITIES'];
 
-            if (Settings::$DEBUG) {
-                $this->storeKillJson($data->{'package'}->{'killID'}, $rawOutput);
-            }
+            // Only process kill that match settings entities
+            if ($this->isWatchedKill($data, $watchedEntities)) {
 
-            $zkb = $data->{'package'}->{'zkb'};
-            $jsonKill = new stdClass();
-            $jsonAttachments = new stdClass();
-
-            $killer = null;
-            $noVictim = false;
-            $attackerCount = count($killmail->{'attackers'});
-            $killId = $killmail->{'killmail_id'};
-
-            // Looking up final blow
-            foreach ($killmail->{'attackers'} as $attacker) {
-                if ($attacker->{'final_blow'} == true) {
-                    $killer = $attacker;
-                }
-            }
-
-            // Handling NPC kills
-            if (!isset($killer->{'character_id'})) {
-                $killerName = $this->getShipName($killer->{'ship_type_id'});
-            } else {
-                $killerName = $this->getCharacterName($killer->{'character_id'});
-            }
-
-            // Handling case with no pilots victims
-            $victim = $killmail->{'victim'};
-            if (!isset($victim->{'character_id'})) {
-                $noVictim = true;
-                $victimName = $this->getCorporationName($victim->{'corporation_id'});
-            } else {
-                $victimName = $this->getCharacterName($victim->{'character_id'});
-            }
-
-            $victimShipId = $victim->{'ship_type_id'};
-            $victimShipName = $this->getShipName($victimShipId);
-
-            $isVictimCorpWatched = in_array($victim->{'corporation_id'}, Settings::$WATCHED_ENTITIES['corporations']);
-            $isVictimAllianceWatched =
-                isset($victim->{'alliance'}) &&
-                in_array($victim->{'alliance_id'}, Settings::$WATCHED_ENTITIES['alliances']);
-
-            // Dissociating kill and loss
-            if ($isVictimAllianceWatched || $isVictimCorpWatched) {
-
-                $jsonKill->fallback = "$victimName's $victimShipName got killed by $killerName";
-                if (isset($killer->{'corporation_id'})) {
-                    $jsonKill->fallback .= ' (' . $this->getCorporationName($killer->{'corporation_id'}) . ')';
-                }
-                $jsonKill->color = 'danger';
-
-            } else {
-                $victimCorpName = $this->getCorporationName($victim->{'corporation_id'});
-
-                if($noVictim) {
-                    $jsonKill->fallback = "$killerName killed $victimName's $victimShipName";
-                } else {
-                    $jsonKill->fallback = "$killerName killed $victimName's $victimShipName ($victimCorpName)";
+                if (Settings::$DEBUG) {
+                    $this->storeKillJson($data->{'package'}->{'killID'}, $rawOutput);
                 }
 
-                $jsonKill->color = 'good';
+                $jsonAttachments = $this->formatKillData($data, $watchedEntities);
+
+                $this->pushToSlack($jsonAttachments, $slackHook);
             }
-
-
-            /*
-             * Formatting data for slack
-             */
-
-            $jsonKill->title = $jsonKill->fallback;
-            $jsonKill->title_link = "https://zkillboard.com/kill/$killId/";
-            $jsonKill->thumb_url = "https://imageserver.eveonline.com/Render/".$victimShipId."_64.png";
-
-            $killValue = number_format($zkb->{'totalValue'}, 2, ',', ' ');
-
-            $jsonKillValue = new stdClass();
-            $jsonKillValue->title = 'Value';
-            $jsonKillValue->value = $killValue . ' ISK';
-            $jsonKillValue->short = 'true';
-
-            $jsonTotalAttackers = new stdClass();
-            $jsonTotalAttackers->title = 'Pilots involved';
-            $jsonTotalAttackers->value = $attackerCount;
-            $jsonTotalAttackers->short = 'true';
-
-            $jsonKill->fields = [$jsonKillValue, $jsonTotalAttackers];
-            $jsonAttachments->attachments = [$jsonKill];
-
-            $this->pushToSlack($jsonAttachments);
         }
-
 
         return true;
     }
 
-    private function isWatchedKill($killmail) {
+    /**
+     * Compare each entities from kill to each watched entities
+     *
+     * @param $data
+     * @param $watchedEntities
+     * @return bool
+     */
+    private function isWatchedKill($data, $watchedEntities)
+    {
 
-        $isVictimWatched = $this->isVictimWatched($killmail);
-        $isAttackerWatched = $this->isAttackerWatched($killmail);
-        $isSystemWatched = $this->isSystemWatched($killmail);
+        $killmail = $data->{'package'}->{'killmail'};
+
+        $isVictimWatched = $this->isVictimWatched($killmail, $watchedEntities);
+        $isAttackerWatched = $this->isAttackerWatched($killmail, $watchedEntities);
+        $isSystemWatched = $this->isSystemWatched($killmail, $watchedEntities);
 
         return $isVictimWatched || $isAttackerWatched || $isSystemWatched;
     }
 
-    private function isVictimWatched($killmail) {
+    /**
+     * Compares victim to watched entities
+     *
+     * @param $killmail
+     * @param $watchedEntities
+     * @return bool
+     */
+    private function isVictimWatched($killmail, $watchedEntities)
+    {
 
         $victim = $killmail->{'victim'};
 
         if (isset($victim->{'corporation_id'})) {
-            if (in_array($victim->{'corporation_id'}, Settings::$WATCHED_ENTITIES['corporations'])){
+            if (in_array($victim->{'corporation_id'}, $watchedEntities['corporations'])) {
                 return true;
             }
         }
 
         if (isset($victim->{'alliance_id'})) {
-            if (in_array($victim->{'alliance_id'}, Settings::$WATCHED_ENTITIES['alliances'])){
+            if (in_array($victim->{'alliance_id'}, $watchedEntities['alliances'])) {
                 return true;
             }
         }
@@ -164,20 +108,28 @@ class Killbot {
         return false;
     }
 
-    private function isAttackerWatched($killmail) {
+    /**
+     * Compares attackers to watched entities
+     *
+     * @param $killmail
+     * @param $watchedEntities
+     * @return bool
+     */
+    private function isAttackerWatched($killmail, $watchedEntities)
+    {
 
         $attackers = $killmail->{'attackers'};
 
         foreach ($attackers as $attacker) {
 
             if (isset($attacker->{'corporation_id'})) {
-                if (in_array($attacker->{'corporation_id'}, Settings::$WATCHED_ENTITIES['corporations'])){
+                if (in_array($attacker->{'corporation_id'}, $watchedEntities['corporations'])) {
                     return true;
                 }
             }
 
             if (isset($attacker->{'alliance_id'})) {
-                if (in_array($attacker->{'alliance_id'}, Settings::$WATCHED_ENTITIES['alliances'])){
+                if (in_array($attacker->{'alliance_id'}, $watchedEntities['alliances'])) {
                     return true;
                 }
             }
@@ -186,16 +138,32 @@ class Killbot {
         return false;
     }
 
-    private function isSystemWatched($killmail)
+    /**
+     * Compare watched systems to kill's system
+     *
+     * @param $killmail
+     * @param $watchedEntities
+     *
+     * @return bool
+     */
+    private function isSystemWatched($killmail, $watchedEntities)
     {
-        if (in_array($killmail->{'solar_system_id'}, Settings::$WATCHED_ENTITIES['systems'])) {
+        if (in_array($killmail->{'solar_system_id'}, $watchedEntities['systems'])) {
             return true;
         }
 
         return false;
     }
 
-    private function getShipName($victimShipId) {
+    /**
+     * Retrieves ship name from ESI
+     *
+     * @param $victimShipId
+     *
+     * @return string
+     */
+    private function getShipName($victimShipId)
+    {
 
         if (in_array($victimShipId, $this->knownShips)) {
             return $this->knownShips[$victimShipId];
@@ -210,7 +178,15 @@ class Killbot {
         return $shipName;
     }
 
-    private function getCharacterName($characterId) {
+    /**
+     * Retrieves character name from ESI
+     *
+     * @param $characterId
+     *
+     * @return string
+     */
+    private function getCharacterName($characterId)
+    {
 
         if (in_array($characterId, $this->knownCharacters)) {
             return $this->knownCharacters[$characterId];
@@ -225,7 +201,15 @@ class Killbot {
         return $characterName;
     }
 
-    private function getCorporationName($corporationId) {
+    /**
+     * Retrieves corporation name from ESI
+     *
+     * @param $corporationId
+     *
+     * @return string
+     */
+    private function getCorporationName($corporationId)
+    {
 
         if (in_array($corporationId, $this->knownCorporations)) {
             return $this->knownCorporations[$corporationId];
@@ -240,7 +224,13 @@ class Killbot {
         return $corporationName;
     }
 
-    private function curlRequest($url) {
+    /**
+     * @param $url
+     *
+     * @return bool|string
+     */
+    private function curlRequest($url)
+    {
 
         $ch = curl_init();
 
@@ -256,15 +246,22 @@ class Killbot {
         return $output;
     }
 
-    private function pushToSlack($killData) {
+    /**
+     * Push the formatted kill to slack
+     *
+     * @param $killData
+     * @param $slackHook
+     */
+    private function pushToSlack($killData, $slackHook)
+    {
 
         if (Settings::$DEBUG) {
             print_r($killData);
         }
 
-        $data = "payload=" .json_encode($killData);
+        $data = "payload=" . json_encode($killData);
 
-        $ch = curl_init(Settings::$SLACK_HOOK);
+        $ch = curl_init($slackHook);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -275,8 +272,14 @@ class Killbot {
         curl_close($ch);
     }
 
-
-    private function storeKillJson($killId, $data) {
+    /**
+     * Stores the kill in a file as json
+     *
+     * @param $killId
+     * @param $data
+     */
+    private function storeKillJson($killId, $data)
+    {
 
         $directoryName = __DIR__ . DIRECTORY_SEPARATOR . Settings::$KILL_LOG_FOLDER;
 
@@ -289,6 +292,106 @@ class Killbot {
         $file = fopen($fileName, 'a+');
         fwrite($file, $data);
         fclose($file);
+    }
+
+    /**
+     * Retrieves missing information and format kill data for slack
+     *
+     * @param $data
+     * @param $watchedEntities
+     *
+     * @return stdClass
+     */
+    protected function formatKillData($data, $watchedEntities): stdClass
+    {
+
+        $killmail = $data->{'package'}->{'killmail'};
+        $zkb = $data->{'package'}->{'zkb'};
+        $jsonKill = new stdClass();
+        $jsonAttachments = new stdClass();
+
+        $killer = null;
+        $noVictim = false;
+        $attackerCount = count($killmail->{'attackers'});
+        $killId = $killmail->{'killmail_id'};
+
+        // Looking up final blow
+        foreach ($killmail->{'attackers'} as $attacker) {
+            if ($attacker->{'final_blow'} == true) {
+                $killer = $attacker;
+            }
+        }
+
+        // Handling NPC kills
+        if (!isset($killer->{'character_id'})) {
+            $killerName = $this->getShipName($killer->{'ship_type_id'});
+        } else {
+            $killerName = $this->getCharacterName($killer->{'character_id'});
+        }
+
+        // Handling case with no pilots victims
+        $victim = $killmail->{'victim'};
+        if (!isset($victim->{'character_id'})) {
+            $noVictim = true;
+            $victimName = $this->getCorporationName($victim->{'corporation_id'});
+        } else {
+            $victimName = $this->getCharacterName($victim->{'character_id'});
+        }
+
+        $victimShipId = $victim->{'ship_type_id'};
+        $victimShipName = $this->getShipName($victimShipId);
+
+        $isVictimCorpWatched = in_array($victim->{'corporation_id'}, $watchedEntities['corporations']);
+        $isVictimAllianceWatched =
+            isset($victim->{'alliance'}) &&
+            in_array($victim->{'alliance_id'}, $watchedEntities['alliances']);
+
+        // Dissociating kill and loss
+        if ($isVictimAllianceWatched || $isVictimCorpWatched) {
+
+            $jsonKill->fallback = "$victimName's $victimShipName got killed by $killerName";
+            if (isset($killer->{'corporation_id'})) {
+                $jsonKill->fallback .= ' (' . $this->getCorporationName($killer->{'corporation_id'}) . ')';
+            }
+            $jsonKill->color = 'danger';
+
+        } else {
+            $victimCorpName = $this->getCorporationName($victim->{'corporation_id'});
+
+            if ($noVictim) {
+                $jsonKill->fallback = "$killerName killed $victimName's $victimShipName";
+            } else {
+                $jsonKill->fallback = "$killerName killed $victimName's $victimShipName ($victimCorpName)";
+            }
+
+            $jsonKill->color = 'good';
+        }
+
+
+        /*
+         * Formatting data for slack
+         */
+
+        $jsonKill->title = $jsonKill->fallback;
+        $jsonKill->title_link = "https://zkillboard.com/kill/$killId/";
+        $jsonKill->thumb_url = "https://imageserver.eveonline.com/Render/" . $victimShipId . "_64.png";
+
+        $killValue = number_format($zkb->{'totalValue'}, 2, ',', ' ');
+
+        $jsonKillValue = new stdClass();
+        $jsonKillValue->title = 'Value';
+        $jsonKillValue->value = $killValue . ' ISK';
+        $jsonKillValue->short = 'true';
+
+        $jsonTotalAttackers = new stdClass();
+        $jsonTotalAttackers->title = 'Pilots involved';
+        $jsonTotalAttackers->value = $attackerCount;
+        $jsonTotalAttackers->short = 'true';
+
+        $jsonKill->fields = [$jsonKillValue, $jsonTotalAttackers];
+        $jsonAttachments->attachments = [$jsonKill];
+
+        return $jsonAttachments;
     }
 
 }

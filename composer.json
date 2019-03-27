@@ -10,7 +10,9 @@
     "require": {
         "php": "^7.0",
         "swiftmailer/swiftmailer": "^6.0",
-        "twig/twig": "^2.0"
+        "twig/twig": "^2.0",
+        "ext-json": "*",
+        "ext-curl": "*"
     },
     "autoload": {
         "psr-4": {

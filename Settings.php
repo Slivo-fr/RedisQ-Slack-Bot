@@ -2,33 +2,37 @@
 
 namespace Killbot;
 
-class Settings {
+class Settings
+{
 
     /*******************************************************************************************************************
      * Basic configuration
      * Should be enough to get your bot running.
-     * Dont forget to setup a cronjob executing cron.php every $MAX_RUN_TIME + a small offset
+     * Dont forget to setup a cron job executing cron.php every $MAX_RUN_TIME + a small offset
      ******************************************************************************************************************/
 
-    // Slack webhook URL
-    public static $SLACK_HOOK   = 'https://hooks.slack.com/services/ABC/DEF/GHI';
+    // Entity ids you want to display killmails for.
+    // You may have different hooks used for watching different entities, just duplicate 'default'.
+    public static $watchingConfigurations = [
+        'default' => [
+            'SLACK_HOOK' => 'https://hooks.slack.com/services/ABC/ABC/ABC',
+            'WATCHED_ENTITIES' => [
+                'corporations' => [
+                    123,
+                ],
+                'alliances' => [
+                    1234,
+                    12345,
+                ],
+                'systems' => [
+                    30000142,
+                ],
+            ],
+        ],
+    ];
 
     // 4 minutes default max run time
     public static $MAX_RUN_TIME = 4 * 60;
-
-    // Entities you want to display killmails for
-    public static $WATCHED_ENTITIES = [
-        'corporations' => [
-            123456,
-            1324567
-        ],
-        'alliances' => [
-            13245678
-        ],
-        'systems' => [
-            30003504
-        ]
-    ];
 
     /*******************************************************************************************************************
      * Mail settings
@@ -57,7 +61,7 @@ class Settings {
      ******************************************************************************************************************/
 
     // HTTP header sent with each bot request
-    public static $HTTP_HEADER  = 'RedisQ-Slack-Bot https://github.com/Slivo-fr/RedisQ-Slack-Bot';
+    public static $HTTP_HEADER = 'RedisQ-Slack-Bot https://github.com/Slivo-fr/RedisQ-Slack-Bot';
 
     // URL to redisQ
     public static $REDISQ_URL = 'https://redisq.zkillboard.com/listen.php?ttw=1';

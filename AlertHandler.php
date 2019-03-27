@@ -11,7 +11,14 @@ use Twig_Environment;
 class AlertHandler
 {
 
-    public static function sendAlertMail(Exception $e) {
+    /**
+     * @param Exception $e
+     * @throws \Twig_Error_Loader
+     * @throws \Twig_Error_Runtime
+     * @throws \Twig_Error_Syntax
+     */
+    public static function sendAlertMail(Exception $e)
+    {
 
         $transport = (new Swift_SmtpTransport(Settings::$SMTP_SERVER, Settings::$SMTP_PORT, Settings::$SECURITY))
             ->setUsername(Settings::$SMTP_USER)
@@ -22,8 +29,8 @@ class AlertHandler
                 array(
                     'ssl' => array(
                         'allow_self_signed' => true,
-                        'verify_peer' => false
-                    )
+                        'verify_peer' => false,
+                    ),
                 )
             );
         }
@@ -39,9 +46,17 @@ class AlertHandler
         if ($mailer->send($message)) {
             echo 'Alert mail sent' . PHP_EOL;
         } else {
-            echo 'Failed to send alert mail'  . PHP_EOL;
+            echo 'Failed to send alert mail' . PHP_EOL;
         }
     }
+
+    /**
+     * @param Exception $e
+     * @return string
+     * @throws \Twig_Error_Loader
+     * @throws \Twig_Error_Runtime
+     * @throws \Twig_Error_Syntax
+     */
     protected static function generateBody(Exception $e)
     {
         $loader = new \Twig_Loader_Filesystem('.');
