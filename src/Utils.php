@@ -23,7 +23,7 @@ class Utils
 
         $file = fopen($path . $filename, $mode);
 
-        if ($file) {
+        if ($file != false) {
             fwrite($file, $data);
             fclose($file);
         } else {
