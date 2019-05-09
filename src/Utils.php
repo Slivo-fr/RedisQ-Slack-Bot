@@ -4,6 +4,7 @@
 namespace Killbot;
 
 
+use Exception;
 use Settings;
 
 class Utils
@@ -14,14 +15,20 @@ class Utils
      * @param string $path
      * @param string $filename
      * @param string $mode
+     * @throws Exception
      */
     public static function writeFile($data, string $path, string $filename, string $mode)
     {
         self::createPath($path);
 
         $file = fopen($path . $filename, $mode);
-        fwrite($file, $data);
-        fclose($file);
+
+        if ($file) {
+            fwrite($file, $data);
+            fclose($file);
+        } else {
+            throw new Exception('Unable to write file ' .$filename);
+        }
     }
 
     public static function createPath($path)

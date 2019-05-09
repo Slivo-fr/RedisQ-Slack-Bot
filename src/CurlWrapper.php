@@ -19,26 +19,30 @@ class CurlWrapper
      * @return bool|string
      * @throws Exception
      */
-    static function curlRequest($url, $method = self::METHOD_GET, $data = null)
+    static public function curlRequest($url, $method = self::METHOD_GET, $data = null)
     {
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_USERAGENT, Settings::$HTTP_HEADER);
+        if ($ch != false) {
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_USERAGENT, Settings::$HTTP_HEADER);
 
-        if ($method == self::METHOD_POST) {
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            if ($method == self::METHOD_POST) {
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            }
+
+            $output = curl_exec($ch);
+            self::handleErrors($output, $ch);
+            curl_close($ch);
+
+            return $output;
         }
 
-        $output = curl_exec($ch);
-        self::handleErrors($output, $ch);
-        curl_close($ch);
-
-        return $output;
+        throw new Exception('Unable to initiate curl');
     }
 
     /**
@@ -47,7 +51,7 @@ class CurlWrapper
      * @return bool|string
      * @throws Exception
      */
-    static function get($url) {
+    static public function get($url) {
         return self::curlRequest($url);
     }
 
@@ -58,7 +62,7 @@ class CurlWrapper
      * @return bool|string
      * @throws Exception
      */
-    static function post($url, $data) {
+    static public function post($url, $data) {
         return self::curlRequest($url, self::METHOD_POST, $data);
     }
 
@@ -67,7 +71,7 @@ class CurlWrapper
      * @param $ch
      * @throws Exception
      */
-    static function handleErrors($output, $ch) {
+    static protected function handleErrors($output, $ch) {
 
         if($output === false)
         {

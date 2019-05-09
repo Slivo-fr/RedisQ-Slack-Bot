@@ -31,6 +31,7 @@ class Killbot
 
         // Processing previously failed kills
         $files = $this->getPendingFiles();
+
         foreach ($files as $file) {
 
             Logger::log('Retrying pending kill '.$file, 'INFO');
@@ -79,7 +80,7 @@ class Killbot
                 if ($this->isWatchedKill($data, $watchedEntities)) {
 
                     if (Settings::$DEBUG) {
-                        Logger::storeKillJson($data->{'package'}->{'killID'}, $rawOutput);
+                        Logger::storeKillJson($data->{'package'}->{'killID'}, json_encode($data));
                     }
 
                     $jsonAttachments = $this->formatKillData($data, $watchedEntities);
@@ -100,7 +101,7 @@ class Killbot
                 Utils::writeFile(
                     $rawOutput,
                     Utils::getUnprocessedPath(),
-                    Uuid::uuid4() . '.kill',
+                    Uuid::uuid4()->toString() . '.kill',
                     'w'
                 );
             }
@@ -207,6 +208,7 @@ class Killbot
      *
      * @param $killData
      * @param $slackHook
+     * @throws Exception
      */
     private function pushToSlack($killData, $slackHook)
     {
@@ -333,7 +335,13 @@ class Killbot
     {
         $unprocessedPath = Utils::getUnprocessedPath();
         Utils::createPath($unprocessedPath);
-        $files = array_diff(scandir($unprocessedPath), array('..', '.'));
+        $files = scandir($unprocessedPath);
+
+        if ($files) {
+            $files = array_diff($files, array('..', '.'));
+        } else {
+            $files = [];
+        }
 
         return $files;
     }

@@ -3,6 +3,8 @@
 
 namespace Killbot;
 
+use Exception;
+
 class Logger
 {
 
@@ -11,8 +13,9 @@ class Logger
      *
      * @param $killId
      * @param $data
+     * @throws Exception
      */
-    static function storeKillJson($killId, $data)
+    static public function storeKillJson($killId, $data)
     {
 
         $path = Utils::getKillPath();
@@ -21,7 +24,7 @@ class Logger
         Utils::writeFile($data, $path, $filename, 'w');
     }
 
-    static function log($string, $type = 'ERROR')
+    static public function log($string, $type = 'ERROR')
     {
 
         $path = Utils::getLogPath();

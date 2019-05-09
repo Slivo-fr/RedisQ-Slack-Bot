@@ -43,7 +43,7 @@ class Settings
 
     // Server configuration
     public static $SMTP_SERVER = 'smtp.example.com';
-    public static $SMTP_PORT = '465';
+    public static $SMTP_PORT = 465;
     public static $SMTP_USER = 'user@example.com';
     public static $SMTP_PASSWORD = 'my_password';
 
