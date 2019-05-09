@@ -1,14 +1,13 @@
 <?php
 
-namespace Killbot;
-
 class Settings
 {
 
     /*******************************************************************************************************************
      * Basic configuration
      * Should be enough to get your bot running.
-     * Dont forget to setup a cron job executing cron.php every $MAX_RUN_TIME + a small offset
+     * Dont forget to setup a cron job executing cron.php every $MAX_RUN_TIME + a small safety offset
+     * Running each 5 minutes should be fine with the default $MAX_RUN_TIME
      ******************************************************************************************************************/
 
     // Entity ids you want to display killmails for.
@@ -69,8 +68,14 @@ class Settings
     // Enable debugging behaviors
     public static $DEBUG = false;
 
-    // Folder name for json logs
-    public static $KILL_LOG_FOLDER = 'logs';
+    // Define running environment, use 'DEV' or 'PROD'
+    public static $ENV = 'PROD';
+
+    // Logs path
+    public static $LOG_PATH = 'var/logs/';
+
+    // Pending kills path
+    public static $UNPROCESSED_PATH = 'var/pending/';
 
     // ESI base URL
     public static $ESI_URL = 'https://esi.evetech.net/';

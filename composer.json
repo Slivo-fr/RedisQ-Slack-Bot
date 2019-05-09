@@ -12,11 +12,12 @@
         "swiftmailer/swiftmailer": "^6.0",
         "twig/twig": "^2.0",
         "ext-json": "*",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "ramsey/uuid": "^3.8"
     },
     "autoload": {
         "psr-4": {
-            "Killbot\\":""
+            "Killbot\\":"src/"
         }
     }
 }
