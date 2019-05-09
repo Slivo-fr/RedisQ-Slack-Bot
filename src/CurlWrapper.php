@@ -82,7 +82,6 @@ class CurlWrapper
 
         if ($http_code >= 400) {
             throw new Exception('HTTP error : ' . $http_code . ' on ' . curl_getinfo($ch, CURLINFO_EFFECTIVE_URL));
-
         }
     }
 }

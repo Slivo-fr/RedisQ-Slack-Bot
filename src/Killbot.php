@@ -106,7 +106,12 @@ class Killbot
                 );
             }
 
-            throw $exception;
+            if (Settings::$ENV === 'DEV') {
+                throw $exception;
+            } else {
+                Logger::log($exception->getMessage());
+                return false;
+            }
         }
     }
 
