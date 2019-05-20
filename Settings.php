@@ -33,6 +33,8 @@ class Settings
     // 4 minutes default max run time
     public static $MAX_RUN_TIME = 4 * 60;
 
+    public static $CACHED_KILL_NUMBER = 50;
+
     /*******************************************************************************************************************
      * Mail settings
      * Allow script to send mail alert when something goes wrong

@@ -7,6 +7,9 @@ use Exception;
 
 class Logger
 {
+    const INFO = 'INFO';
+    const ERROR = 'ERROR';
+    const DEBUG = 'DEBUT';
 
     /**
      * Stores the kill json in a file
@@ -24,7 +27,12 @@ class Logger
         Utils::writeFile($data, $path, $filename, 'w');
     }
 
-    static public function log($string, $type = 'ERROR')
+    /**
+     * @param $string
+     * @param string $type
+     * @throws Exception
+     */
+    static public function log($string, $type = self::ERROR)
     {
 
         $path = Utils::getLogPath();

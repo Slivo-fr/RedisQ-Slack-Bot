@@ -15,6 +15,14 @@ class Killbot
     protected $esiClient;
 
     /**
+     * Array of lasts processed kills
+     * @var array
+     */
+    protected $lastKills = [];
+
+    const CACHED_KILL_FILENAME = 'cachedKills.json';
+
+    /**
      * Runs the bot
      * @throws Exception
      */
@@ -22,6 +30,7 @@ class Killbot
     {
         $isFeedEmpty = false;
         $timeout = time() + Settings::$MAX_RUN_TIME;
+        $this->loadCachedKills();
 
         // Processing queue
         while (!$isFeedEmpty && time() < $timeout) {
@@ -34,7 +43,7 @@ class Killbot
 
         foreach ($files as $file) {
 
-            Logger::log('Retrying pending kill '.$file, 'INFO');
+            Logger::log('Retrying pending kill '.$file, Logger::INFO);
 
             $filepath = Utils::getUnprocessedPath().DIRECTORY_SEPARATOR.$file;
             $this->processKill(
@@ -43,6 +52,8 @@ class Killbot
 
             unlink($filepath);
         }
+
+        $this->saveCachedKills();
     }
 
     /**
@@ -71,6 +82,14 @@ class Killbot
 
         try {
 
+            $killId = $data->{'package'}->{'killID'};
+
+            // RedisQ isn't meant to provide duplicate free feed.
+            if (in_array($killId, $this->lastKills)) {
+                Logger::log('Duplicate kill processing aborted ' . $killId, Logger::INFO);
+                return true;
+            }
+
             foreach (Settings::$watchingConfigurations as $watchingConfiguration) {
 
                 $slackHook = $watchingConfiguration['SLACK_HOOK'];
@@ -80,7 +99,7 @@ class Killbot
                 if ($this->isWatchedKill($data, $watchedEntities)) {
 
                     if (Settings::$DEBUG) {
-                        Logger::storeKillJson($data->{'package'}->{'killID'}, json_encode($data));
+                        Logger::storeKillJson($killId, json_encode($data));
                     }
 
                     $jsonAttachments = $this->formatKillData($data, $watchedEntities);
@@ -89,7 +108,10 @@ class Killbot
                 }
             }
 
+            array_unshift($this->lastKills, $killId);
+
             return true;
+
         } catch (Exception $exception) {
 
             if (!isset($rawOutput)) {
@@ -334,6 +356,7 @@ class Killbot
     }
 
     /**
+     * Retrieves previously failed kill files.
      * @return array
      */
     protected function getPendingFiles(): array
@@ -349,5 +372,29 @@ class Killbot
         }
 
         return $files;
+    }
+
+    /**
+     * Writes cached kill to file
+     * @throws Exception
+     */
+    protected function saveCachedKills()
+    {
+        $this->lastKills = array_slice($this->lastKills, 0, Settings::$CACHED_KILL_NUMBER);
+        Utils::writeFile(json_encode($this->lastKills), Utils::getLogPath(), self::CACHED_KILL_FILENAME, 'w+');
+    }
+
+    /**
+     * Loads cached kill
+     * @throws Exception
+     */
+    protected function loadCachedKills()
+    {
+        $file = Utils::getLogPath().self::CACHED_KILL_FILENAME;
+
+        if (file_exists($file)) {
+            $json = file_get_contents(Utils::getLogPath().self::CACHED_KILL_FILENAME);
+            $this->lastKills = json_decode($json, true);
+        }
     }
 }

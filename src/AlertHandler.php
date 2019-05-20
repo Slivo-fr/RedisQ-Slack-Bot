@@ -2,15 +2,16 @@
 
 namespace Killbot;
 
+use Exception;
 use Settings;
 use Swift_Mailer;
 use Swift_Message;
 use Swift_SmtpTransport;
-use Twig_Environment;
-use Twig_Error_Loader;
-use Twig_Error_Runtime;
-use Twig_Error_Syntax;
-use Twig_Loader_Filesystem;
+use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
+use Twig\Loader\FilesystemLoader;
 
 class AlertHandler
 {
@@ -19,9 +20,10 @@ class AlertHandler
      * @param $errorMessage
      * @param $file
      * @param $line
-     * @throws Twig_Error_Loader
-     * @throws Twig_Error_Runtime
-     * @throws Twig_Error_Syntax
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws Exception
      */
     public static function sendAlertMail($errorMessage, $file, $line)
     {
@@ -50,7 +52,7 @@ class AlertHandler
 
 
         if ($mailer->send($message)) {
-            Logger::log('Alert mail sent');
+            Logger::log('Alert mail sent', Logger::INFO);
         } else {
             Logger::log('Failed to send alert mail');
         }
@@ -61,14 +63,14 @@ class AlertHandler
      * @param $file
      * @param $line
      * @return string
-     * @throws Twig_Error_Loader
-     * @throws Twig_Error_Runtime
-     * @throws Twig_Error_Syntax
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     protected static function generateBody($message, $file, $line)
     {
-        $loader = new Twig_Loader_Filesystem('.');
-        $twig = new Twig_Environment($loader);
+        $loader = new FilesystemLoader(dirname(__FILE__) . '/../template/');
+        $twig = new Environment($loader);
 
         $body = $twig->render(
             'mail.html.twig',
