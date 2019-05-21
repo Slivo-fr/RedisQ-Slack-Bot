@@ -18,9 +18,9 @@ class Killbot
      * Array of lasts processed kills
      * @var array
      */
-    protected $lastKills = [];
+    protected $killHistory = [];
 
-    const CACHED_KILL_FILENAME = 'cachedKills.json';
+    const KILL_HISTORY_FILENAME = 'killHistory.json';
 
     /**
      * Runs the bot
@@ -30,7 +30,7 @@ class Killbot
     {
         $isFeedEmpty = false;
         $timeout = time() + Settings::$MAX_RUN_TIME;
-        $this->loadCachedKills();
+        $this->loadKillHistory();
 
         // Processing queue
         while (!$isFeedEmpty && time() < $timeout) {
@@ -53,7 +53,7 @@ class Killbot
             unlink($filepath);
         }
 
-        $this->saveCachedKills();
+        $this->saveKillHistory();
     }
 
     /**
@@ -83,9 +83,10 @@ class Killbot
         try {
 
             $killId = $data->{'package'}->{'killID'};
+            $isKillWatched = false;
 
             // RedisQ isn't meant to provide duplicate free feed.
-            if (in_array($killId, $this->lastKills)) {
+            if (in_array($killId, $this->killHistory)) {
                 Logger::log('Duplicate kill processing aborted ' . $killId, Logger::INFO);
                 return true;
             }
@@ -98,6 +99,8 @@ class Killbot
                 // Only process kill that match settings entities
                 if ($this->isWatchedKill($data, $watchedEntities)) {
 
+                    $isKillWatched = true;
+
                     if (Settings::$DEBUG) {
                         Logger::storeKillJson($killId, json_encode($data));
                     }
@@ -108,7 +111,10 @@ class Killbot
                 }
             }
 
-            array_unshift($this->lastKills, $killId);
+            // Doesn't store non-watched kills
+            if ($isKillWatched) {
+                array_unshift($this->killHistory, $killId);
+            }
 
             return true;
 
@@ -131,7 +137,7 @@ class Killbot
             if (Settings::$ENV === 'DEV') {
                 throw $exception;
             } else {
-                Logger::log($exception->getMessage());
+                Logger::log($exception);
                 return false;
             }
         }
@@ -375,26 +381,26 @@ class Killbot
     }
 
     /**
-     * Writes cached kill to file
+     * Writes last kills to file
      * @throws Exception
      */
-    protected function saveCachedKills()
+    protected function saveKillHistory()
     {
-        $this->lastKills = array_slice($this->lastKills, 0, Settings::$CACHED_KILL_NUMBER);
-        Utils::writeFile(json_encode($this->lastKills), Utils::getLogPath(), self::CACHED_KILL_FILENAME, 'w+');
+        $this->killHistory = array_slice($this->killHistory, 0, Settings::$KILL_HISTORY_MAX_LENGTH);
+        Utils::writeFile(json_encode($this->killHistory), Utils::getLogPath(), self::KILL_HISTORY_FILENAME, 'w+');
     }
 
     /**
-     * Loads cached kill
+     * Loads last kills
      * @throws Exception
      */
-    protected function loadCachedKills()
+    protected function loadKillHistory()
     {
-        $file = Utils::getLogPath().self::CACHED_KILL_FILENAME;
+        $file = Utils::getLogPath().self::KILL_HISTORY_FILENAME;
 
         if (file_exists($file)) {
-            $json = file_get_contents(Utils::getLogPath().self::CACHED_KILL_FILENAME);
-            $this->lastKills = json_decode($json, true);
+            $json = file_get_contents(Utils::getLogPath().self::KILL_HISTORY_FILENAME);
+            $this->killHistory = json_decode($json, true);
         }
     }
 }

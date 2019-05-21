@@ -33,7 +33,7 @@ class Settings
     // 4 minutes default max run time
     public static $MAX_RUN_TIME = 4 * 60;
 
-    public static $CACHED_KILL_NUMBER = 50;
+    public static $KILL_HISTORY_MAX_LENGTH = 50;
 
     /*******************************************************************************************************************
      * Mail settings

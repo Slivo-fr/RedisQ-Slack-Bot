@@ -15,7 +15,7 @@ set_error_handler(
 
 set_exception_handler(
     function ($exception) {
-        Logger::log($exception->getMessage());
+        Logger::log($exception);
         if (Settings::$ENV === 'PROD' && Settings::$SEND_MAIL) {
             AlertHandler::sendAlertMail($exception->getMessage(), $exception->getFile(), $exception->getLine());
         } elseif (Settings::$ENV === 'DEV') {
