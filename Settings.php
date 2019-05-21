@@ -41,7 +41,7 @@ class Settings
      ******************************************************************************************************************/
 
     // Enable sending mails
-    public static $SEND_MAIL = true;
+    public static $SEND_MAIL = false;
 
     // Server configuration
     public static $SMTP_SERVER = 'smtp.example.com';

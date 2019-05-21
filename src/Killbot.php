@@ -387,7 +387,13 @@ class Killbot
     protected function saveKillHistory()
     {
         $this->killHistory = array_slice($this->killHistory, 0, Settings::$KILL_HISTORY_MAX_LENGTH);
-        Utils::writeFile(json_encode($this->killHistory), Utils::getLogPath(), self::KILL_HISTORY_FILENAME, 'w+');
+
+        Utils::writeFile(
+            json_encode($this->killHistory) . PHP_EOL,
+            Utils::getLogPath(),
+            self::KILL_HISTORY_FILENAME,
+            'w+'
+        );
     }
 
     /**
@@ -399,7 +405,7 @@ class Killbot
         $file = Utils::getLogPath().self::KILL_HISTORY_FILENAME;
 
         if (file_exists($file)) {
-            $json = file_get_contents(Utils::getLogPath().self::KILL_HISTORY_FILENAME);
+            $json = file_get_contents(Utils::getLogPath() . self::KILL_HISTORY_FILENAME);
             $this->killHistory = json_decode($json, true);
         }
     }
