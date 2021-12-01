@@ -138,6 +138,7 @@ class Killbot
                 throw $exception;
             } else {
                 Logger::log($exception);
+                AlertHandler::sendAlertMail($exception->getMessage(), $exception->getFile(), $exception->getLine());
                 return false;
             }
         }
