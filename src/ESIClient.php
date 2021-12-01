@@ -50,7 +50,7 @@ class ESIClient
         return $this->getEntityName(
             $characterId,
             'characters',
-            Settings::$ESI_URL."v4/characters/$characterId/"
+            Settings::$ESI_URL."v5/characters/$characterId/"
         );
     }
 
