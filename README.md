@@ -1,3 +1,10 @@
+# DISCONTINUED 
+
+I'm not playing eve anymore, and the bot started throwing errors I will not fix myself.
+Feel free to submit merge requests but don't exect any update from my end
+
+Fly safe o7
+
 # RedisQ-Slack-Bot
 A simple PHP bot posting kills from Zkillboard to Slack.
 
